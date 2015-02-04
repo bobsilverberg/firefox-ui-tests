@@ -25,10 +25,13 @@ class TestStarInAutocomplete(FirefoxTestCase):
         self.prefs.set_pref(self.PREF_LOCATION_BAR_SUGGEST, 0)
 
     def tearDown(self):
+        # Close the autocomplete results
+        self.browser.navbar.locationbar.autocomplete_results.close()
+
         FirefoxTestCase.tearDown(self)
 
-        self.prefs.reset_pref(self.PREF_LOCATION_BAR_SUGGEST)
-
+    # TODO: Replace with places module method when available
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1121731
     def clear_history(self):
         with self.marionette.using_context('content'):
             self.marionette.navigate('about:blank')
@@ -47,6 +50,7 @@ class TestStarInAutocomplete(FirefoxTestCase):
 
         self.browser.menubar.select('Bookmarks', 'Bookmark This Page')
         done_button = self.marionette.find_element('id', 'editBookmarkPanelDoneButton')
+        self.wait_for_condition(lambda mn: done_button.is_displayed)
         done_button.click()
 
         self.clear_history()
@@ -66,11 +70,9 @@ class TestStarInAutocomplete(FirefoxTestCase):
         self.wait_for_condition(lambda mn: len(autocomplete_results.visible_results) == 1)
 
         first_result = autocomplete_results.visible_results[0]
-        matching_title = autocomplete_results.get_matching_text(first_result, 'title')[0]
-        self.assertEqual(
-            search_string.lower(),
-            matching_title.lower(),
-            'The page title matches the highlighted text')
-        self.assertEqual('bookmark',
-                         first_result.get_attribute('type'),
-                         'The auto-complete result is a bookmark')
+        matching_titles = autocomplete_results.get_matching_text(first_result, 'title')
+        for title in matching_titles:
+            self.wait_for_condition(lambda mn: search_string.lower() == title.lower())
+        self.assertIn('bookmark',
+                      first_result.get_attribute('type'),
+                      'The auto-complete result is a bookmark')
