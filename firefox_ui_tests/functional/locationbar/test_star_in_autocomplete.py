@@ -4,6 +4,8 @@
 
 import time
 
+from marionette.errors import NoSuchElementException
+
 from firefox_ui_harness.decorators import skip_under_xvfb
 from firefox_ui_harness.testcase import FirefoxTestCase
 
@@ -26,9 +28,12 @@ class TestStarInAutocomplete(FirefoxTestCase):
 
     def tearDown(self):
         # Close the autocomplete results
-        self.browser.navbar.locationbar.autocomplete_results.close()
-
-        FirefoxTestCase.tearDown(self)
+        try:
+            self.browser.navbar.locationbar.autocomplete_results.close()
+        except NoSuchElementException:
+            pass
+        finally:
+            FirefoxTestCase.tearDown(self)
 
     # TODO: Replace with places module method when available
     # https://bugzilla.mozilla.org/show_bug.cgi?id=1121731
@@ -48,7 +53,9 @@ class TestStarInAutocomplete(FirefoxTestCase):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.marionette.absolute_url('layout/mozilla_grants.html'))
 
+        # TODO: Convert to l10n friendly accessor when menu library is available
         self.browser.menubar.select('Bookmarks', 'Bookmark This Page')
+        # TODO: Replace hard-coded selector with library method when one is available
         done_button = self.marionette.find_element('id', 'editBookmarkPanelDoneButton')
         self.wait_for_condition(lambda mn: done_button.is_displayed)
         done_button.click()
