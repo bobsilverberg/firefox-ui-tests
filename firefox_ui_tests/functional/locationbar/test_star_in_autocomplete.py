@@ -21,7 +21,7 @@ class TestStarInAutocomplete(FirefoxTestCase):
     def setUp(self):
         FirefoxTestCase.setUp(self)
 
-        self.clear_history()
+        self.clean_up_state()
 
         # Location bar suggests 'History and Bookmarks'
         self.prefs.set_pref(self.PREF_LOCATION_BAR_SUGGEST, 0)
@@ -30,21 +30,17 @@ class TestStarInAutocomplete(FirefoxTestCase):
         # Close the autocomplete results
         try:
             self.browser.navbar.locationbar.autocomplete_results.close()
+            self.places.restore_default_bookmarks()
         except NoSuchElementException:
             pass
         finally:
             FirefoxTestCase.tearDown(self)
 
-    # TODO: Replace with places module method when available
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=1121731
-    def clear_history(self):
+    def clean_up_state(self):
         with self.marionette.using_context('content'):
             self.marionette.navigate('about:blank')
 
-        self.marionette.execute_script('''
-            let count = gBrowser.sessionHistory.count;
-            gBrowser.sessionHistory.PurgeHistory(count);
-        ''')
+        self.places.remove_all_history()
 
     @skip_under_xvfb
     def test_star_in_autocomplete(self):
@@ -60,11 +56,11 @@ class TestStarInAutocomplete(FirefoxTestCase):
         self.wait_for_condition(lambda mn: done_button.is_displayed)
         done_button.click()
 
-        self.clear_history()
+        self.clean_up_state()
 
         locationbar = self.browser.navbar.locationbar
-        # TODO: Replace with visited observer when places module is available
-        # https://bugzilla.mozilla.org/show_bug.cgi?id=1121731
+        # TODO: Replace with places.wait_for_visited when observers have been implemented
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1121691
         # The data for autocomplete does not load immediately and we cannot wait for an observer
         # until the bug 1121731 is complete
         time.sleep(4)
