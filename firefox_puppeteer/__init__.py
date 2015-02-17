@@ -71,6 +71,14 @@ class Puppeteer(object):
         See the :class:`~api.prefs.Preferences` reference.
         """
 
+    @use_class_as_property('api.software_update.SoftwareUpdate')
+    def software_update(self):
+        """
+        Provides support for an easy access to the update process.
+
+        See the :class:`~api.software_update.SoftwareUpdate` reference.
+        """
+
     @use_class_as_property('ui.windows.Windows')
     def windows(self):
         """
