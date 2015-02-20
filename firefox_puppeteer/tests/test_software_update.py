@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from marionette.errors import TimeoutException
+
 from firefox_ui_harness.testcase import FirefoxTestCase
 
 
@@ -24,12 +26,51 @@ class TestSoftwareUpdate(FirefoxTestCase):
         self.software_update.mar_channels.set_channels(self.saved_mar_channels)
         FirefoxTestCase.tearDown(self)
 
+    def check_for_updates(self):
+        """Checks for available updates."""
+        try:
+            # Version using checkForUpdates which I believe is working, but
+            # still doesn't allow us to find an active update
+            self.marionette.execute_async_script("""
+
+                let checker = Cc['@mozilla.org/updates/update-checker;1']
+                    .createInstance(Ci.nsIUpdateChecker);
+                checker.checkForUpdates({
+                    onCheckComplete: function(aRequest, aUpdates, aUpdateCount) {
+                        return marionetteScriptFinished(true);
+                    },
+                    onError: function(aRequest, aUpdate) {
+                        return marionetteScriptFinished(false);
+                    },
+                    QueryInterface: function(aIID) {
+                      if (!aIID.equals(Components.interfaces.nsIUpdateCheckListener) &&
+                          !aIID.equals(Components.interfaces.nsISupports))
+                        throw Components.results.NS_ERROR_NO_INTERFACE;
+                      return this;
+                    }
+                  }, true);
+
+            """, script_timeout=10000)
+        except TimeoutException:
+            pass
+
+    def select_update(self):
+        """Select an update to be the active one"""
+        # TODO: I cannot figure out how to get list updates that are available in order to select one
+        self.marionette.execute_script("""
+            let aus = Cc['@mozilla.org/updates/update-service;1']
+                .getService(Ci.nsIApplicationUpdateService);
+            aus.selectUpdate();
+        """)
+
+
     def test_abi(self):
         self.assertTrue(self.software_update.ABI)
 
     def test_active_update(self):
         # TODO: I cannot seem to get active_update to work
 
+        self.check_for_updates()
         self.assertEqual(2, self.software_update.active_update.patch_count)
 
     def test_allowed(self):

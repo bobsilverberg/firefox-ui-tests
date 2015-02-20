@@ -6,7 +6,6 @@ import ConfigParser
 import re
 
 import mozinfo
-from marionette.errors import TimeoutException
 
 from ..base import BaseLib
 from .appinfo import AppInfo
@@ -82,34 +81,6 @@ class SoftwareUpdate(BaseLib):
             'user_agent': self.app_info.user_agent,
             'version': self.app_info.version
         }
-
-    def check_for_updates(self):
-        """Checks for available updates."""
-        try:
-            # Version using checkForUpdates which I believe is working, but
-            # still doesn't allow us to find an active update
-            self.marionette.execute_async_script("""
-
-                let checker = Cc['@mozilla.org/updates/update-checker;1']
-                    .createInstance(Ci.nsIUpdateChecker);
-                checker.checkForUpdates({
-                    onCheckComplete: function(aRequest, aUpdates, aUpdateCount) {
-                        return marionetteScriptFinished(true);
-                    },
-                    onError: function(aRequest, aUpdate) {
-                        return marionetteScriptFinished(false);
-                    },
-                    QueryInterface: function(aIID) {
-                      if (!aIID.equals(Components.interfaces.nsIUpdateCheckListener) &&
-                          !aIID.equals(Components.interfaces.nsISupports))
-                        throw Components.results.NS_ERROR_NO_INTERFACE;
-                      return this;
-                    }
-                  }, true);
-
-            """, script_timeout=10000)
-        except TimeoutException:
-            pass
 
     def get_update_at(self, update_index):
         """Use nsIUpdateManager.getUpdateAt() to return an update
@@ -207,8 +178,6 @@ class ActiveUpdate(object):
     def __init__(self, software_update):
 
         self.marionette = software_update.marionette
-        # TODO: trying to force a check for updates, but still none are found
-        # software_update.check_for_updates()
 
     def get_patch_at(self, patch_index):
         """Use nsIUpdate.getPatchAt to return a patch from an update
