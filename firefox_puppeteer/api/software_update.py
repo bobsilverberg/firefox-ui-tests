@@ -125,6 +125,15 @@ class SoftwareUpdate(BaseLib):
 
         """, script_args=[update_index])
 
+    def init_update_tests(self, fallback=False):
+        """Initialize all the data used by update tests.
+
+        :param fallback: It is a fallback update
+        """
+
+        # TODO: This needs to include logic from initUpdateTests in software-update.js
+        pass
+
     @property
     def is_complete_update(self):
         """Return true if the offered update is a complete update
@@ -199,7 +208,7 @@ class ActiveUpdate(object):
 
         self.marionette = software_update.marionette
         # TODO: trying to force a check for updates, but still none are found
-        software_update.check_for_updates()
+        # software_update.check_for_updates()
 
     def get_patch_at(self, patch_index):
         """Use nsIUpdate.getPatchAt to return a patch from an update

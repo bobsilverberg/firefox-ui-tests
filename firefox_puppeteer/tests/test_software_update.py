@@ -27,10 +27,10 @@ class TestSoftwareUpdate(FirefoxTestCase):
     def test_abi(self):
         self.assertTrue(self.software_update.ABI)
 
-    # def test_active_update(self):
-    #     # TODO: I cannot seem to get active_update to work
-    #
-    #     self.assertEqual('something', self.software_update.active_update)
+    def test_active_update(self):
+        # TODO: I cannot seem to get active_update to work
+
+        self.assertEqual(2, self.software_update.active_update.patch_count)
 
     def test_allowed(self):
         self.assertEqual(True, self.software_update.allowed)

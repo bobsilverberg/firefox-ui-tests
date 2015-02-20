@@ -99,6 +99,8 @@ class Windows(BaseLib):
 
         if window_type == 'navigator:browser':
             window = BrowserWindow(lambda: self.marionette, handle)
+        elif window_type == 'Browser:About':
+            window = BrowserWindow(lambda: self.marionette, handle)
         else:
             raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
                                             (window_type, handle))
