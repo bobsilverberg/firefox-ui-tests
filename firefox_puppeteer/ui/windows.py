@@ -100,6 +100,9 @@ class Windows(BaseLib):
         elif window_type == 'Browser:page-info':
             from .pageinfo.window import PageInfoWindow
             window = PageInfoWindow(lambda: self.marionette, handle)
+        elif window_type == 'Browser:About':
+            from .about_window import AboutWindow
+            window = AboutWindow(lambda: self.marionette, handle)
         else:
             raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
                                             (window_type, handle))
@@ -503,6 +506,29 @@ class BrowserWindow(BaseWindow):
                 raise ValueError('Unknown opening method: "%s"' % trigger)
 
         return BaseWindow.open_window(self, callback, BrowserWindow)
+
+    def open_about_window(self, trigger='menu'):
+        """Opens the about window by using the specified trigger.
+
+        :param trigger: Optional, method in how to open the new browser window. This can
+         either the string `menu` or a callback which gets triggered
+         with the current :class:`BrowserWindow` as parameter. Defaults to `menu`.
+
+        :returns: :class:`AboutWindow` instance of the opened window.
+        """
+        def callback(win):
+            # Prepare action which triggers the opening of the browser window
+            if callable(trigger):
+                trigger(win)
+            elif trigger == 'menu':
+                # TODO: Make use of menubar class once it supports ids
+                menu = win.marionette.find_element(By.ID, 'aboutName')
+                menu.click()
+            else:
+                raise ValueError('Unknown opening method: "%s"' % trigger)
+
+        from .about_window import AboutWindow
+        return BaseWindow.open_window(self, callback, AboutWindow)
 
     def open_page_info_window(self, trigger='menu'):
         """Opens the page info window by using the specified trigger.
