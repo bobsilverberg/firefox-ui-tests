@@ -4,10 +4,11 @@
 
 from datetime import datetime
 
-from marionette import By, Wait
+from marionette_driver import By, Wait
 
-from .windows import BaseWindow
-from ..api.software_update import SoftwareUpdate
+from ..windows import BaseWindow
+from ...api.software_update import SoftwareUpdate
+from deck import Deck
 
 
 class AboutWindow(BaseWindow):
@@ -26,6 +27,15 @@ class AboutWindow(BaseWindow):
         self.download_duration = -1
 
     @property
+    def deck(self):
+        """The :class:`Deck` instance which represents the deck.
+
+        :returns: Reference to the deck.
+        """
+        deck = self.window_element.find_element(By.ID, 'updateDeck')
+        return Deck(lambda: self.marionette, self, deck)
+
+    @property
     def patch_info(self):
         """ Returns information about the active update in the queue.
 
@@ -37,26 +47,22 @@ class AboutWindow(BaseWindow):
 
     @property
     def updates_found(self):
-        """ Checks if updates were found
+        """ Checks if updates were found.
 
         :returns: True if updates were found
         """
-
         return self.wizard_state != 'noUpdatesFound'
 
     @property
     def wizard_state(self):
-        deck = self.marionette.find_element(By.ID, 'updateDeck')
-        return self.marionette.execute_script("""
-          return arguments[0].selectedPanel.id;
-        """, script_args=[deck])
+        """ Returns the current state of the update wizard."""
+        return self.deck.wizard_state
 
     def check_for_updates(self):
         """Clicks on "Check for Updates" button, and waits for check to complete"""
         Wait(self.marionette).until(
             lambda _: self.wizard_state == 'checkForUpdates')
-        check_button = self.marionette.find_element(By.ID, 'checkForUpdatesButton')
-        check_button.click()
+        self.deck.click_check_for_updates_button()
 
         # Wait for the update checking to finish
         Wait(self.marionette, self.TIMEOUT_UPDATE_CHECK).until(
@@ -65,28 +71,29 @@ class AboutWindow(BaseWindow):
     def download(self, wait_for_finish=True, timeout=TIMEOUT_UPDATE_DOWNLOAD):
         """ Download the update
 
-        :param wait_for_finish: Should the function wait until the download has finished?
+        :param wait_for_finish: Optional, True, if the function has to wait
+        for the download to be finished, default to `True`
         :param timeout: How long to wait for the download to finish
         """
         assert self.software_update.update_channel.default_channel ==\
-               self.software_update.update_channel.channel,\
+            self.software_update.update_channel.channel,\
             'The update channel has been set correctly.'
 
         if self.wizard_state == 'downloadAndInstall':
-            install_button = self.marionette.find_element(By.ID, 'downloadAndInstallButton')
-            install_button.click()
+            self.deck.click_download_button()
 
-        # Wait for the download to start
-        Wait(self.marionette).until(
-            lambda _: self.wizard_state != 'downloadAndInstall')
+            # Wait for the download to start
+            Wait(self.marionette).until(
+                lambda _: self.wizard_state != 'downloadAndInstall')
 
         # If there are incompatible addons we fallback on old software update dialog for updating
         if self.wizard_state == 'applyBillboard':
-            update_button = self.marionette.find_element(By.ID, 'updateButton')
-            update_button.click()
+            self.deck.click_update_button()
 
             # The rest of the code inside this `if` uses the update wizard which is
-            # not being converted yet
+            # not being converted yet, so raise a NotImplementedError.
+            raise NotImplementedError('Fallback dialog logic not yet implemented.')
+
             #
             # The current JS code is:
             #
@@ -100,10 +107,10 @@ class AboutWindow(BaseWindow):
 
         if wait_for_finish:
             start_time = datetime.now()
-            self._wait_for_download_finished(timeout)
+            self.wait_for_download_finished(timeout)
             self.download_duration = datetime.now() - start_time
 
-    def _wait_for_download_finished(self, timeout):
+    def wait_for_download_finished(self, timeout):
         """ Waits until download is completed
 
         :param timeout: How long to wait for the download to complete
@@ -125,6 +132,9 @@ class AboutWindow(BaseWindow):
             lambda _: self.wizard_state == 'apply',
             message='Final wizard page has been selected.')
 
+        # Wait for update to be staged because for update tests we modify the update
+        # status file to enforce the fallback update. If we modify the file before
+        # Firefox does, Firefox will override our change and we will have no fallback update.
         Wait(self.marionette, timeout).until(
             lambda _: 'applied' in self.software_update.active_update.state,
             message='Update has been applied.')

@@ -101,7 +101,7 @@ class Windows(BaseLib):
             from .pageinfo.window import PageInfoWindow
             window = PageInfoWindow(lambda: self.marionette, handle)
         elif window_type == 'Browser:About':
-            from .about_window import AboutWindow
+            from .about_window.window import AboutWindow
             window = AboutWindow(lambda: self.marionette, handle)
         else:
             raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
@@ -527,7 +527,7 @@ class BrowserWindow(BaseWindow):
             else:
                 raise ValueError('Unknown opening method: "%s"' % trigger)
 
-        from .about_window import AboutWindow
+        from .about_window.window import AboutWindow
         return BaseWindow.open_window(self, callback, AboutWindow)
 
     def open_page_info_window(self, trigger='menu'):

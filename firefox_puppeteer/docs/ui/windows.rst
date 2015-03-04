@@ -12,7 +12,3 @@ Windows
 .. autoclass:: BrowserWindow
    :members:
    :inherited-members:
-
-.. autoclass:: AboutWindow
-   :members:
-   :inherited-members:
