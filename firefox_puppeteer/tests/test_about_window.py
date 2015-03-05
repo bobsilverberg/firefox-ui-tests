@@ -12,7 +12,7 @@ class TestAboutWindow(FirefoxTestCase):
     def setUp(self):
         FirefoxTestCase.setUp(self)
 
-        self.about_window = self.browser.open_about_window(trigger='menu')
+        self.about_window = self.browser.open_about_window()
 
     def tearDown(self):
         try:
@@ -23,17 +23,52 @@ class TestAboutWindow(FirefoxTestCase):
     def test_basic(self):
         self.assertEqual(self.about_window.window_type, 'Browser:About')
 
-    def test_check_for_updates_and_download(self):
-        # testing both of these as they need to occur in this order
-        self.about_window.check_for_updates()
-        self.assertEqual('downloadAndInstall', self.about_window.wizard_state)
-        self.about_window.download()
-        self.assertEqual('apply', self.about_window.wizard_state)
+    def test_elements(self):
+        """Test correct retrieval of elements."""
+        self.assertNotEqual(self.about_window.dtds, [])
 
-    def test_close_window(self):
-        """Test closing the About window."""
-        self.about_window.close()
-        self.assertTrue(self.about_window.closed)
+        self.assertEqual(
+            self.about_window.deck.element.get_attribute('localName'),
+            'deck')
+
+        # apply panel
+        panel = self.about_window.deck.apply
+        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
+        self.assertEqual(panel.update_button.get_attribute('localName'), 'button')
+
+        # apply_billboard panel
+        panel = self.about_window.deck.apply_billboard
+        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
+        self.assertEqual(
+            panel.apply_billboard_button.get_attribute('localName'),
+            'button')
+
+        # check_for_updates panel
+        panel = self.about_window.deck.check_for_updates
+        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
+        self.assertEqual(
+            panel.check_for_updates_button.get_attribute('localName'),
+            'button')
+
+        # checking_for_updates panel
+        self.assertEqual(
+            self.about_window.deck.checking_for_updates.element.get_attribute('localName'),
+            'hbox')
+
+        # download_and_install panel
+        panel = self.about_window.deck.download_and_install
+        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
+        self.assertEqual(panel.download_button.get_attribute('localName'), 'button')
+
+        # download_failed panel
+        self.assertEqual(
+            self.about_window.deck.download_failed.element.get_attribute('localName'),
+            'hbox')
+
+        # downloading panel
+        self.assertEqual(
+            self.about_window.deck.downloading.element.get_attribute('localName'),
+            'hbox')
 
     def test_open_window(self):
         """Test various opening strategies."""
@@ -45,19 +80,12 @@ class TestAboutWindow(FirefoxTestCase):
                            opener,
                            )
 
+        self.about_window.close()
         for trigger in open_strategies:
-            if not self.about_window.closed:
-                self.about_window.close()
             about_window = self.browser.open_about_window(trigger=trigger)
             self.assertEquals(about_window, self.windows.current)
             about_window.close()
 
     def test_patch_info(self):
-        self.assertTrue(self.about_window.patch_info['download_duration'])
-        self.assertTrue(self.about_window.patch_info['channel'])
-
-    def test_updates_found(self):
-        self.assertTrue(self.about_window.updates_found)
-
-    def test_wizard_state(self):
-        self.assertTrue(self.about_window.wizard_state)
+        self.assertEqual(self.about_window.patch_info['download_duration'], -1)
+        self.assertNotEqual(self.about_window.patch_info['channel'], None)

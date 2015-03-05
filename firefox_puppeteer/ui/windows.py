@@ -95,14 +95,14 @@ class Windows(BaseLib):
             if handle != current_handle:
                 self.marionette.switch_to_window(current_handle)
 
-        if window_type == 'navigator:browser':
+        if window_type == 'Browser:About':
+            from .about_window.window import AboutWindow
+            window = AboutWindow(lambda: self.marionette, handle)
+        elif window_type == 'navigator:browser':
             window = BrowserWindow(lambda: self.marionette, handle)
         elif window_type == 'Browser:page-info':
             from .pageinfo.window import PageInfoWindow
             window = PageInfoWindow(lambda: self.marionette, handle)
-        elif window_type == 'Browser:About':
-            from .about_window.window import AboutWindow
-            window = AboutWindow(lambda: self.marionette, handle)
         else:
             raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
                                             (window_type, handle))
