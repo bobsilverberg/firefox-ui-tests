@@ -17,7 +17,7 @@ class AboutWindow(BaseWindow):
 
     dtds = [
         'chrome://branding/locale/brand.dtd',
-        'chrome://browser/locale/aboutDialog.dtd'
+        'chrome://browser/locale/aboutDialog.dtd',
     ]
 
     TIMEOUT_UPDATE_APPLY = 300
@@ -27,7 +27,7 @@ class AboutWindow(BaseWindow):
     def __init__(self, *args, **kwargs):
         BaseWindow.__init__(self, *args, **kwargs)
 
-        self.software_update = SoftwareUpdate(lambda: self.marionette)
+        self._software_update = SoftwareUpdate(lambda: self.marionette)
         self._download_duration = -1
 
     @property
@@ -45,13 +45,13 @@ class AboutWindow(BaseWindow):
 
         :returns: A dictionary with information about the active patch
         """
-        patch = self.software_update.patch_info
+        patch = self._software_update.patch_info
         patch['download_duration'] = self._download_duration
         return patch
 
     def check_for_updates(self):
         """Clicks on "Check for Updates" button, and waits for check to complete."""
-        self.deck.check_for_updates_button.click()
+        self.deck.check_for_updates.button.click()
         self.wait_for_check_finished()
 
     def download(self, wait_for_finish=True, timeout=TIMEOUT_UPDATE_DOWNLOAD):
@@ -62,22 +62,22 @@ class AboutWindow(BaseWindow):
         :param timeout: Optional, How long to wait for the download to finish,
         default to 360 seconds
         """
-        assert self.software_update.update_channel.default_channel == \
-            self.software_update.update_channel.channel, \
+        assert self._software_update.update_channel.default_channel == \
+            self._software_update.update_channel.channel, \
             'The update channel has been set correctly. ' \
             'default_channel: is {}, while channel is: {}'.format(
-                self.software_update.update_channel.default_channel,
-                self.software_update.update_channel.channel)
+                self._software_update.update_channel.default_channel,
+                self._software_update.update_channel.channel)
 
-        if self.deck.selected(self.deck.download_and_install):
-            self.deck.download_button.click()
+        if self.deck.selected_panel == self.deck.download_and_install:
+            self.deck.download_and_install.button.click()
 
             # Wait for the download to start
             Wait(self.marionette).until(
-                lambda _: not self.deck.selected(self.deck.download_and_install))
+                lambda _: self.deck.selected_panel != self.deck.download_and_install)
 
         # If there are incompatible addons we fallback on old software update dialog for updating
-        if self.deck.selected(self.deck.apply_billboard):
+        if self.deck.selected_panel == self.deck.apply_billboard:
             # The rest of the code inside this method uses the update wizard which is
             # not being converted yet, so raise a NotImplementedError.
             raise NotImplementedError('Fallback dialog logic not yet implemented.')
@@ -106,8 +106,8 @@ class AboutWindow(BaseWindow):
         default to 30 seconds
         """
         Wait(self.marionette, self.TIMEOUT_UPDATE_CHECK).until(
-            lambda _: not self.deck.selected(self.deck.check_for_updates) and
-            not self.deck.selected(self.deck.checking_for_updates),
+            lambda _: self.deck.selected_panel != self.deck.check_for_updates and
+            self.deck.selected_panel != self.deck.checking_for_updates,
             message='An update has been found.')
 
     def wait_for_download_finished(self, timeout=TIMEOUT_UPDATE_DOWNLOAD):
@@ -117,10 +117,11 @@ class AboutWindow(BaseWindow):
         default to 360 seconds
         """
         Wait(self.marionette, timeout).until(
-            lambda _: not self.deck.selected(self.deck.downloading),
+            lambda _: self.deck.selected_panel != self.deck.download_and_install and
+            self.deck.selected_panel != self.deck.downloading,
             message='Download has been completed.')
 
-        assert not self.deck.selected(self.deck.download_failed),\
+        assert self.deck.selected_panel != self.deck.download_failed,\
             'Update has been downloaded'
 
     def wait_for_update_applied(self, timeout=TIMEOUT_UPDATE_APPLY):
@@ -130,12 +131,12 @@ class AboutWindow(BaseWindow):
         default to 300 seconds
         """
         Wait(self.marionette, timeout).until(
-            lambda _: self.deck.selected(self.deck.apply),
+            lambda _: self.deck.selected_panel == self.deck.apply,
             message='Final wizard page has been selected.')
 
         # Wait for update to be staged because for update tests we modify the update
         # status file to enforce the fallback update. If we modify the file before
         # Firefox does, Firefox will override our change and we will have no fallback update.
         Wait(self.marionette, timeout).until(
-            lambda _: 'applied' in self.software_update.active_update.state,
+            lambda _: 'applied' in self._software_update.active_update.state,
             message='Update has been applied.')

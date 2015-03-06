@@ -22,7 +22,7 @@ class Deck(UIBaseLib):
                    'checkingForUpdates': CheckingForUpdatesPanel,
                    'downloadAndInstall': DownloadAndInstallPanel,
                    'downloadFailed': DownloadFailedPanel,
-                   'downloading': ApplyBillboardPanel
+                   'downloading': DownloadingPanel
                    }
 
         panel = self.element.find_element(By.ID, panel_id)
@@ -137,10 +137,10 @@ class Panel(UIBaseLib):
 class ApplyBillboardPanel(Panel):
 
     @property
-    def apply_billboard_button(self):
+    def button(self):
         """The DOM element which represents the Apply Billboard button.
 
-        :returns: Reference to the textbox element.
+        :returns: Reference to the button element.
         """
         return self.element.find_element(By.ID, 'applyButtonBillboard')
 
@@ -148,10 +148,10 @@ class ApplyBillboardPanel(Panel):
 class ApplyPanel(Panel):
 
     @property
-    def update_button(self):
+    def button(self):
         """The DOM element which represents the Update button.
 
-        :returns: Reference to the textbox element.
+        :returns: Reference to the button element.
         """
         return self.element.find_element(By.ID, 'updateButton')
 
@@ -159,10 +159,10 @@ class ApplyPanel(Panel):
 class CheckForUpdatesPanel(Panel):
 
     @property
-    def check_for_updates_button(self):
+    def button(self):
         """The DOM element which represents the Check for Updates button.
 
-        :returns: Reference to the textbox element.
+        :returns: Reference to the button element.
         """
         return self.element.find_element(By.ID, 'checkForUpdatesButton')
 
@@ -174,10 +174,10 @@ class CheckingForUpdatesPanel(Panel):
 class DownloadAndInstallPanel(Panel):
 
     @property
-    def download_button(self):
+    def button(self):
         """The DOM element which represents the Download button.
 
-        :returns: Reference to the textbox element.
+        :returns: Reference to the button element.
         """
         return self.element.find_element(By.ID, 'downloadAndInstallButton')
 

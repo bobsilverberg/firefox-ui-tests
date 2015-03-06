@@ -34,21 +34,17 @@ class TestAboutWindow(FirefoxTestCase):
         # apply panel
         panel = self.about_window.deck.apply
         self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(panel.update_button.get_attribute('localName'), 'button')
+        self.assertEqual(panel.button.get_attribute('localName'), 'button')
 
         # apply_billboard panel
         panel = self.about_window.deck.apply_billboard
         self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(
-            panel.apply_billboard_button.get_attribute('localName'),
-            'button')
+        self.assertEqual(panel.button.get_attribute('localName'), 'button')
 
         # check_for_updates panel
         panel = self.about_window.deck.check_for_updates
         self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(
-            panel.check_for_updates_button.get_attribute('localName'),
-            'button')
+        self.assertEqual(panel.button.get_attribute('localName'), 'button')
 
         # checking_for_updates panel
         self.assertEqual(
@@ -58,17 +54,15 @@ class TestAboutWindow(FirefoxTestCase):
         # download_and_install panel
         panel = self.about_window.deck.download_and_install
         self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(panel.download_button.get_attribute('localName'), 'button')
+        self.assertEqual(panel.button.get_attribute('localName'), 'button')
 
         # download_failed panel
-        self.assertEqual(
-            self.about_window.deck.download_failed.element.get_attribute('localName'),
-            'hbox')
+        self.assertEqual(self.about_window.deck.download_failed.element.get_attribute('localName'),
+                         'hbox')
 
         # downloading panel
-        self.assertEqual(
-            self.about_window.deck.downloading.element.get_attribute('localName'),
-            'hbox')
+        self.assertEqual(self.about_window.deck.downloading.element.get_attribute('localName'),
+                         'hbox')
 
     def test_open_window(self):
         """Test various opening strategies."""
@@ -88,4 +82,4 @@ class TestAboutWindow(FirefoxTestCase):
 
     def test_patch_info(self):
         self.assertEqual(self.about_window.patch_info['download_duration'], -1)
-        self.assertNotEqual(self.about_window.patch_info['channel'], None)
+        self.assertTrue(self.about_window.patch_info['channel'])
