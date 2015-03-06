@@ -63,7 +63,7 @@ class AboutWindow(BaseWindow):
         default to 360 seconds
         """
         assert self.software_update.update_channel.default_channel == \
-               self.software_update.update_channel.channel, \
+            self.software_update.update_channel.channel, \
             'The update channel has been set correctly. ' \
             'default_channel: is {}, while channel is: {}'.format(
                 self.software_update.update_channel.default_channel,
